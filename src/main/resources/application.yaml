@@ -1,0 +1,8 @@
+spring.application.name: perk
+
+server:
+  port: 8080
+
+external-api:
+  base-url: https://api.example.com
+  api-key: ${EXTERNAL_API_KEY:test-key}
