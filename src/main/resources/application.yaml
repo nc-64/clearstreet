@@ -4,5 +4,5 @@ server:
   port: 8080
 
 external-api:
-  base-url: https://api.example.com
-  api-key: ${EXTERNAL_API_KEY:test-key}
+  base-url: ${EXTERNAL_API_BASE_URL:https://jsonplaceholder.typicode.com}
+  api-key: ${EXTERNAL_API_KEY:}

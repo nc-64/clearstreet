@@ -1,0 +1,7 @@
+### Example GET request
+GET https://jsonplaceholder.typicode.com/posts/1
+Accept: application/json
+
+### Local Spring Boot application check
+GET http://localhost:8080
+Accept: application/json

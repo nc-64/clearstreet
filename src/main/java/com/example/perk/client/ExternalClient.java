@@ -1,36 +1,156 @@
+
 package com.example.perk.client;
 
-import com.example.perk.model.UserResponse;
+import com.example.perk.exception.ExternalApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.util.UriBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.net.URI;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Component
 public class ExternalClient {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(ExternalClient.class);
+
     private final RestClient restClient;
 
     public ExternalClient(
-        RestClient.Builder restClientBuilder,
-        @Value("${external-api.base-url}") String url,
-        @Value("${external-api.api-key}") String apiKey) {
-        this.restClient = restClientBuilder
-                .baseUrl(url)
-                .defaultHeader("X-API-KEY", apiKey)
-                .build();
+            RestClient.Builder restClientBuilder,
+            @Value("${external-api.base-url}") String baseUrl,
+            @Value("${external-api.api-key:}") String apiKey) {
+
+        RestClient.Builder builder = restClientBuilder
+                .baseUrl(baseUrl)
+                .defaultStatusHandler(
+                        HttpStatusCode::isError,
+                        (request, response) -> {
+                            String message = String.format(
+                                    "External API [%s %s] failed with status: %s",
+                                    request.getMethod(),
+                                    request.getURI(),
+                                    response.getStatusCode()
+                            );
+
+                            log.error(message);
+
+                            throw new ExternalApiException(
+                                    message,
+                                    HttpStatus.BAD_GATEWAY
+                            );
+                        }
+                );
+
+        // Add API key only when one is configured
+        if (apiKey != null && !apiKey.isBlank()) {
+            builder.defaultHeader("X-API-KEY", apiKey);
+        }
+
+        this.restClient = builder.build();
     }
 
-
-    public List<UserResponse> getUsers(){
-        return restClient
-                .get()
-                .uri("/users")
+    /**
+     * GET request returning a single object.
+     */
+    public <T> T get(String uri, Class<T> responseType) {
+        return execute(() -> restClient.get()
+                .uri(uri)
                 .retrieve()
-                .body(new ParameterizedTypeReference<List<UserResponse>>() {});
+                .body(responseType));
     }
 
+    /**
+     * GET request returning a generic type, e.g. List<T>.
+     */
+    public <T> T get(
+            String uri,
+            ParameterizedTypeReference<T> responseType) {
+
+        return execute(() -> restClient.get()
+                .uri(uri)
+                .retrieve()
+                .body(responseType));
+    }
+
+    /**
+     * GET request with query params via UriBuilder, returning a generic type (e.g. List<T>).
+     */
+    public <T> T get(
+            Function<UriBuilder, URI> uriFunction,
+            ParameterizedTypeReference<T> responseType) {
+
+        return execute(() -> restClient.get()
+                .uri(uriFunction)
+                .retrieve()
+                .body(responseType));
+    }
+
+    /**
+     * GET request with query params via UriBuilder, returning a single object.
+     */
+    public <T> T get(
+            Function<UriBuilder, URI> uriFunction,
+            Class<T> responseType) {
+
+        return execute(() -> restClient.get()
+                .uri(uriFunction)
+                .retrieve()
+                .body(responseType));
+    }
+
+    /**
+     * POST request with a body and typed response.
+     */
+    public <T, R> R post(
+            String uri,
+            T requestBody,
+            Class<R> responseType) {
+
+        return execute(() -> restClient.post()
+                .uri(uri)
+                .body(requestBody)
+                .retrieve()
+                .body(responseType));
+    }
+
+    /**
+     * Shared HTTP execution and exception handling.
+     */
+    private <T> T execute(Supplier<T> clientCall) {
+        try {
+            return clientCall.get();
+
+        } catch (ExternalApiException e) {
+            throw e;
+
+        } catch (ResourceAccessException e) {
+            log.error("Unable to reach external API", e);
+
+            throw new ExternalApiException(
+                    "Unable to connect to external API",
+                    HttpStatus.BAD_GATEWAY,
+                    e
+            );
+
+        } catch (RestClientException e) {
+            log.error("External API communication failure", e);
+
+            throw new ExternalApiException(
+                    "Error communicating with external API",
+                    HttpStatus.BAD_GATEWAY,
+                    e
+            );
+        }
+    }
 }

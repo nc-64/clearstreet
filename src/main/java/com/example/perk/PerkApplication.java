@@ -10,6 +10,4 @@ public class PerkApplication {
 		SpringApplication.run(PerkApplication.class, args);
 	}
 
-
-
 }
