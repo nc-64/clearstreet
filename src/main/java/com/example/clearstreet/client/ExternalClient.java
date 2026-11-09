@@ -1,9 +1,8 @@
 
-package com.example.perk.client;
+package com.example.clearstreet.client;
 
-import com.example.perk.exception.ExternalApiException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.example.clearstreet.exception.ExternalApiException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -18,11 +17,9 @@ import java.net.URI;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@Slf4j
 @Component
 public class ExternalClient {
-
-    private static final Logger log =
-            LoggerFactory.getLogger(ExternalClient.class);
 
     private final RestClient restClient;
 

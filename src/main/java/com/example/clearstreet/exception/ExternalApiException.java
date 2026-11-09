@@ -1,4 +1,4 @@
-package com.example.perk.exception;
+package com.example.clearstreet.exception;
 
 import org.springframework.http.HttpStatus;
 

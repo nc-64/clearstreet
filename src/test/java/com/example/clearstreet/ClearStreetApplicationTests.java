@@ -1,10 +1,10 @@
-package com.example.perk;
+package com.example.clearstreet;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class PerkApplicationTests {
+class ClearStreetApplicationTests {
 
 	@Test
 	void contextLoads() {

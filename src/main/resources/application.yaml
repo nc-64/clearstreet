@@ -1,4 +1,4 @@
-spring.application.name: perk
+spring.application.name: clearstreet
 
 server:
   port: 8080

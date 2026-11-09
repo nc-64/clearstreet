@@ -1,6 +1,6 @@
-package com.example.perk.client;
+package com.example.clearstreet.client;
 
-import com.example.perk.exception.ExternalApiException;
+import com.example.clearstreet.exception.ExternalApiException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
